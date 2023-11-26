@@ -23,6 +23,7 @@ async function run() {
   try {
     // database collections
     const usersCollection = client.db("arenaContest").collection("users");
+    const contestCollection = client.db("arenaContest").collection("contest");
 
     // get users information using email
     app.get("/users/:email", async (req, res) => {
@@ -31,7 +32,24 @@ async function run() {
       const result = await usersCollection.findOne(query);
       res.send(result);
     });
-
+    //get user role
+    app.get("/users/role/:email", async (req, res) => {
+      const email = req.params.email;
+      //   if (email !== req.decoded.email) {
+      //     return res.status(403).send({ message: "forbidden access" });
+      //   }
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      let role = false;
+      if (user?.role === "admin") {
+        role = "admin";
+      } else if (user?.role === "moderator") {
+        role = "moderator";
+      } else {
+        role = "user";
+      }
+      res.send({ role });
+    });
     // store users information into database
     app.post("/users", async (req, res) => {
       const user = req.body;
@@ -41,6 +59,14 @@ async function run() {
         return res.send({ message: "User already existed" });
       }
       const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
+
+    // contest collection
+    // add new contest
+    app.post("/contest", async (req, res) => {
+      const newContest = req.body;
+      const result = await contestCollection.insertOne(newContest);
       res.send(result);
     });
 
