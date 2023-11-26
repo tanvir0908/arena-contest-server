@@ -25,11 +25,30 @@ async function run() {
     const usersCollection = client.db("arenaContest").collection("users");
     const contestCollection = client.db("arenaContest").collection("contest");
 
+    // users collection
+    // get all users data
+    app.get("/users", async (req, res) => {
+      const result = await usersCollection.find().toArray();
+      res.send(result);
+    });
     // get users information using email
     app.get("/users/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const result = await usersCollection.findOne(query);
+      res.send(result);
+    });
+    // change user role
+    app.patch("/users", async (req, res) => {
+      const id = req.body.id;
+      const role = req.body.role;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          role: role,
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
     //get user role
@@ -67,6 +86,20 @@ async function run() {
     app.post("/contest", async (req, res) => {
       const newContest = req.body;
       const result = await contestCollection.insertOne(newContest);
+      res.send(result);
+    });
+    // get contests by email
+    app.get("/contest", async (req, res) => {
+      const email = req.query.email;
+      const query = { creatorEmail: email };
+      const result = await contestCollection.find(query).toArray();
+      res.send(result);
+    });
+    // delete contest
+    app.delete("/contest/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await contestCollection.deleteOne(query);
       res.send(result);
     });
 
