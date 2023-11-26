@@ -24,6 +24,14 @@ async function run() {
     // database collections
     const usersCollection = client.db("arenaContest").collection("users");
 
+    // get users information using email
+    app.get("/users/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await usersCollection.findOne(query);
+      res.send(result);
+    });
+
     // store users information into database
     app.post("/users", async (req, res) => {
       const user = req.body;
