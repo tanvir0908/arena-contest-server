@@ -85,14 +85,79 @@ async function run() {
     // add new contest
     app.post("/contest", async (req, res) => {
       const newContest = req.body;
+      const creatorEmail = req.body.creatorEmail;
+      const creatorFilter = { email: creatorEmail };
+      const creatorData = await usersCollection.findOne(creatorFilter);
+      const newCount = Number(creatorData.count) + 1;
+      const updateDoc = {
+        $set: {
+          count: newCount,
+        },
+      };
+      const updateUser = await usersCollection.updateOne(
+        creatorFilter,
+        updateDoc
+      );
       const result = await contestCollection.insertOne(newContest);
       res.send(result);
     });
-    // get contests by email
+    // get contest data using id
+    app.get("/contest/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await contestCollection.findOne(query);
+      res.send(result);
+    });
+    // get all contests
     app.get("/contest", async (req, res) => {
+      const result = await contestCollection.find().toArray();
+      res.send(result);
+    });
+    // get approved contests
+    app.get("/approvedContests", async (req, res) => {
+      const query = { status: "approved" };
+      const result = await contestCollection.find(query).toArray();
+      res.send(result);
+    });
+    // get approved contests by contest type
+    app.get("/approvedContests/:type", async (req, res) => {
+      const type = req.params.type;
+      const query = { status: "approved" };
+      const result = await contestCollection.find(query).toArray();
+      const filterResult = result.filter(
+        (contest) => contest.contestType === type
+      );
+      res.send(filterResult);
+    });
+    //get approved most popular contests
+    app.get("/popularContests", async (req, res) => {
+      const query = {};
+      const options = {
+        sort: { participationCount: -1 },
+      };
+      const result = await contestCollection
+        .find(query, options)
+        .limit(6)
+        .toArray();
+      res.send(result);
+    });
+    // get contests by email
+    app.get("/contestByEmail", async (req, res) => {
       const email = req.query.email;
       const query = { creatorEmail: email };
       const result = await contestCollection.find(query).toArray();
+      res.send(result);
+    });
+    // approve contest from admin
+    app.patch("/contest/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: "approved",
+        },
+      };
+      const result = await contestCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
     // delete contest
