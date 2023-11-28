@@ -62,16 +62,38 @@ async function run() {
       const options = {
         sort: { count: -1 },
       };
-      const allModerators = await usersCollection
+      const selectedModerators = await usersCollection
         .find(filter, options)
         .limit(4)
         .toArray();
-      const moderatorsEmail = allModerators.map((moderator) => moderator.email);
-      const moderatorsWithContest = await contestCollection
+      const moderatorsEmail = selectedModerators.map(
+        (moderator) => moderator.email
+      );
+      const selectedContests = await contestCollection
         .find({ creatorEmail: { $in: moderatorsEmail } })
         .toArray();
-      res.send({ moderatorsWithContest, allModerators });
+      res.send({ selectedContests, moderatorsEmail, selectedModerators });
     });
+    // // get best creator 2.0
+    // app.get("/bestCreators", async (req, res) => {
+    //   const result = await usersCollection
+    //     .aggregate([
+    //       {
+    //         $unwind: "$email",
+    //       },
+    //       {
+    //         $lookup: {
+    //           form: "contest",
+    //           localField: "email",
+    //           foreignField: "creatorEmail",
+    //           as: "combinedData",
+    //         },
+    //       },
+    //     ])
+    //     .toArray();
+    //   res.send(result);
+    // });
+
     // store users information into database
     app.post("/users", async (req, res) => {
       const user = req.body;
