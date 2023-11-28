@@ -38,19 +38,6 @@ async function run() {
       const result = await usersCollection.findOne(query);
       res.send(result);
     });
-    // change user role
-    app.patch("/users", async (req, res) => {
-      const id = req.body.id;
-      const role = req.body.role;
-      const filter = { _id: new ObjectId(id) };
-      const updateDoc = {
-        $set: {
-          role: role,
-        },
-      };
-      const result = await usersCollection.updateOne(filter, updateDoc);
-      res.send(result);
-    });
     //get user role
     app.get("/users/role/:email", async (req, res) => {
       const email = req.params.email;
@@ -69,6 +56,22 @@ async function run() {
       }
       res.send({ role });
     });
+    // get best creators
+    app.get("/bestCreators", async (req, res) => {
+      const filter = { role: "moderator" };
+      const options = {
+        sort: { count: -1 },
+      };
+      const allModerators = await usersCollection
+        .find(filter, options)
+        .limit(4)
+        .toArray();
+      const moderatorsEmail = allModerators.map((moderator) => moderator.email);
+      const moderatorsWithContest = await contestCollection
+        .find({ creatorEmail: { $in: moderatorsEmail } })
+        .toArray();
+      res.send({ moderatorsWithContest, allModerators });
+    });
     // store users information into database
     app.post("/users", async (req, res) => {
       const user = req.body;
@@ -78,6 +81,19 @@ async function run() {
         return res.send({ message: "User already existed" });
       }
       const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
+    // change user role
+    app.patch("/users", async (req, res) => {
+      const id = req.body.id;
+      const role = req.body.role;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          role: role,
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
 
