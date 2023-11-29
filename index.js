@@ -1,6 +1,9 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
+const stripe = require("stripe")(
+  "sk_test_51OEtWTJ5bzp9GZmmp0OyYzJpEnveKmUVOE3RTp8mtuKBk44bzUwvCs9MQzPEnnKoN9LHqbKZaOLkyE6ImnBkWtXZ005dc00cTd"
+);
 const port = process.env.PORT || 5000;
 require("dotenv").config();
 
@@ -24,6 +27,21 @@ async function run() {
     // database collections
     const usersCollection = client.db("arenaContest").collection("users");
     const contestCollection = client.db("arenaContest").collection("contest");
+
+    // payment intent
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "cad",
+        payment_method_types: ["card"],
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
 
     // users collection
     // get all users data
@@ -74,25 +92,6 @@ async function run() {
         .toArray();
       res.send({ selectedContests, moderatorsEmail, selectedModerators });
     });
-    // // get best creator 2.0
-    // app.get("/bestCreators", async (req, res) => {
-    //   const result = await usersCollection
-    //     .aggregate([
-    //       {
-    //         $unwind: "$email",
-    //       },
-    //       {
-    //         $lookup: {
-    //           form: "contest",
-    //           localField: "email",
-    //           foreignField: "creatorEmail",
-    //           as: "combinedData",
-    //         },
-    //       },
-    //     ])
-    //     .toArray();
-    //   res.send(result);
-    // });
 
     // store users information into database
     app.post("/users", async (req, res) => {
