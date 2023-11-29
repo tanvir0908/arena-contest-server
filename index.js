@@ -286,6 +286,30 @@ async function run() {
       const result = await contestCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
+
+    //update contest
+    app.patch("/updateContest", async (req, res) => {
+      const id = req.body.id;
+      const updateContest = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          contestName: updateContest.contestName,
+          contestPhoto: updateContest.contestPhoto,
+          contestPrice: updateContest.contestPrice,
+          priceMoney: updateContest.priceMoney,
+          contestType: updateContest.contestType,
+          contestDeadline: updateContest.contestDeadline,
+          contestDescription: updateContest.contestDescription,
+          participationCount: updateContest.participationCount,
+          status: updateContest.status,
+          creatorEmail: updateContest.creatorEmail,
+          contestWinnerEmail: updateContest.contestWinnerEmail,
+        },
+      };
+      const result = await contestCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
     // delete contest
     app.delete("/contest/:id", async (req, res) => {
       const id = req.params.id;
