@@ -118,6 +118,19 @@ async function run() {
       const result = await usersCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
+    // update users information
+    app.patch("/updateUser", async (req, res) => {
+      const updateUser = req.body;
+      const filter = { email: updateUser.email };
+      const updateDoc = {
+        $set: {
+          name: updateUser.name,
+          photo: updateUser.photo,
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
 
     // contest collection
     // add new contest
@@ -192,6 +205,24 @@ async function run() {
       const query = { contestWinnerEmail: email };
       const result = await contestCollection.find(query).toArray();
       res.send(result);
+    });
+    // get winning stat by email
+    app.get("/winningStat", async (req, res) => {
+      const email = req.query.email;
+      const winningQuery = { contestWinnerEmail: email };
+      const winningContest = await contestCollection
+        .find(winningQuery)
+        .toArray();
+
+      const allQuery = { userEmail: email };
+      const allContest = await registerCollection.find(allQuery).toArray();
+      const allParticipatedContest = allContest.filter(
+        (contest) => contest.status === "participated"
+      );
+      const winningStat =
+        (winningContest.length / allParticipatedContest.length) * 100;
+      // const winningStat = winningContest.length / allParticipatedContest.length;
+      res.send({ winningStat });
     });
     // get registered contest by users email
     app.get("/registeredContest", async (req, res) => {
