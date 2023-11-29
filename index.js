@@ -197,7 +197,10 @@ async function run() {
     app.get("/registeredContest", async (req, res) => {
       const email = req.query.email;
       const query = { userEmail: email };
-      const result = await registerCollection.find(query).toArray();
+      const options = {
+        sort: { contestDeadline: 1 },
+      };
+      const result = await registerCollection.find(query, options).toArray();
       res.send(result);
     });
     // store registered contest information
