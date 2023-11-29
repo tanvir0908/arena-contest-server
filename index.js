@@ -27,6 +27,7 @@ async function run() {
     // database collections
     const usersCollection = client.db("arenaContest").collection("users");
     const contestCollection = client.db("arenaContest").collection("contest");
+    const registerCollection = client.db("arenaContest").collection("register");
 
     // payment intent
     app.post("/create-payment-intent", async (req, res) => {
@@ -183,6 +184,29 @@ async function run() {
       const email = req.query.email;
       const query = { creatorEmail: email };
       const result = await contestCollection.find(query).toArray();
+      res.send(result);
+    });
+    // get registered contest by users email
+    app.get("/registeredContest", async (req, res) => {
+      const email = req.query.email;
+      const query = { userEmail: email };
+      const result = await registerCollection.find(query).toArray();
+      res.send(result);
+    });
+    // store registered contest information
+    app.post("/registeredContest", async (req, res) => {
+      const newRegister = req.body;
+      const id = req.body.contest_Id;
+      const query = { _id: new ObjectId(id) };
+      const contestData = await contestCollection.findOne(query);
+      const newCount = Number(contestData.participationCount) + 1;
+      const updateDoc = {
+        $set: {
+          participationCount: newCount,
+        },
+      };
+      const updateContest = await contestCollection.updateOne(query, updateDoc);
+      const result = await registerCollection.insertOne(newRegister);
       res.send(result);
     });
     // approve contest from admin
