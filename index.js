@@ -186,6 +186,13 @@ async function run() {
       const result = await contestCollection.find(query).toArray();
       res.send(result);
     });
+    // get winning contests by email
+    app.get("/winningContest", async (req, res) => {
+      const email = req.query.email;
+      const query = { contestWinnerEmail: email };
+      const result = await contestCollection.find(query).toArray();
+      res.send(result);
+    });
     // get registered contest by users email
     app.get("/registeredContest", async (req, res) => {
       const email = req.query.email;
@@ -197,18 +204,42 @@ async function run() {
     app.post("/registeredContest", async (req, res) => {
       const newRegister = req.body;
       const id = req.body.contest_Id;
-      const query = { _id: new ObjectId(id) };
-      const contestData = await contestCollection.findOne(query);
+      const result = await registerCollection.insertOne(newRegister);
+      res.send(result);
+    });
+
+    // participation to the contest and store it into database
+    app.patch("/registeredContest", async (req, res) => {
+      // register collection status update
+      const id = req.body.id;
+      const registerFilter = { _id: new ObjectId(id) };
+      const updateDocRegister = {
+        $set: {
+          status: "participated",
+        },
+      };
+      const updateRegister = await registerCollection.updateOne(
+        registerFilter,
+        updateDocRegister
+      );
+      // contest collection participate number update
+      const contestId = req.body.contestId;
+      const contestFilter = { _id: new ObjectId(contestId) };
+      const contestData = await contestCollection.findOne(contestFilter);
       const newCount = Number(contestData.participationCount) + 1;
-      const updateDoc = {
+      const updateDocContest = {
         $set: {
           participationCount: newCount,
         },
       };
-      const updateContest = await contestCollection.updateOne(query, updateDoc);
-      const result = await registerCollection.insertOne(newRegister);
-      res.send(result);
+      const updateContest = await contestCollection.updateOne(
+        contestFilter,
+        updateDocContest
+      );
+      console.log(updateContest, updateRegister);
+      res.send(updateRegister);
     });
+
     // approve contest from admin
     app.patch("/contest/:id", async (req, res) => {
       const id = req.params.id;
