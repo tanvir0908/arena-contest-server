@@ -224,6 +224,14 @@ async function run() {
       // const winningStat = winningContest.length / allParticipatedContest.length;
       res.send({ winningStat });
     });
+
+    // get all register details
+    app.get("/registerParticipants", async (req, res) => {
+      const id = req.query.id;
+      const query = { contest_Id: id };
+      const result = await registerCollection.find(query).toArray();
+      res.send(result);
+    });
     // get registered contest by users email
     app.get("/registeredContest", async (req, res) => {
       const email = req.query.email;
@@ -286,7 +294,20 @@ async function run() {
       const result = await contestCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
-
+    //set winner in contest
+    app.patch("/updateWinner", async (req, res) => {
+      const updateWinner = req.body;
+      const id = updateWinner.id;
+      const filter = { _id: new ObjectId(id) };
+      const email = updateWinner.email;
+      const updatedDoc = {
+        $set: {
+          contestWinnerEmail: email,
+        },
+      };
+      const result = await contestCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
     //update contest
     app.patch("/updateContest", async (req, res) => {
       const id = req.body.id;
