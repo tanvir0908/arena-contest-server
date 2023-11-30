@@ -219,8 +219,8 @@ async function run() {
       const allParticipatedContest = allContest.filter(
         (contest) => contest.status === "participated"
       );
-      const winningStat =
-        (winningContest.length / allParticipatedContest.length) * 100;
+
+      const winningStat = winningContest.length / allParticipatedContest.length;
       // const winningStat = winningContest.length / allParticipatedContest.length;
       res.send({ winningStat });
     });
@@ -338,11 +338,6 @@ async function run() {
       const result = await contestCollection.deleteOne(query);
       res.send(result);
     });
-
-    await client.db("admin").command({ ping: 1 });
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
   } finally {
   }
 }
